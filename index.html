@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Калькулятор Ивентовой Лестницы</title>
+  <style>
+    :root {
+      --bg-color: #1a1a2e;
+      --card-bg: #16213e;
+      --accent: #0f3460;
+      --highlight: #e94560;
+      --text-main: #eaeaea;
+      --text-muted: #b0b0b0;
+      --success: #4caf50;
+      --warning: #ff9800;
+      --ksg-color: #9c27b0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 20px;
+      padding-bottom: 140px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1,
+    h2,
+    h3 {
+      text-align: center;
+      color: var(--text-main);
+      margin-bottom: 15px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Инпуты и Кнопки */
+    input,
+    select,
+    button {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid var(--accent);
+      background: #0f3460;
+      color: white;
+      font-size: 14px;
+    }
+
+    .reset-btn {
+      background-color: var(--highlight);
+      border: none;
+      cursor: pointer;
+      display: block;
+      margin: 0 auto 20px auto;
+      font-weight: bold;
+      padding: 10px 30px;
+      text-transform: uppercase;
+    }
+
+    .presets-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+
+    .preset-btn {
+      background: var(--accent);
+      cursor: pointer;
+      border: 1px solid #4ecca3;
+      font-size: 11px;
+    }
+
+    /* Табличный вид источников */
+    .source-header {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+      padding: 0 5px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: bold;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 5px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      align-items: center;
+      padding: 5px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 5px;
+    }
+
+    .col-name {
+      flex: 3;
+      min-width: 150px;
+    }
+
+    .col-val {
+      width: 100px;
+    }
+
+    .col-count {
+      width: 70px;
+    }
+
+    .col-ksg {
+      width: 100px;
+    }
+
+    .col-toggle {
+      width: 60px;
+    }
+
+    .col-action {
+      width: 40px;
+    }
+
+    .source-ksg-price {
+      border-color: var(--ksg-color);
+      background: rgba(156, 39, 176, 0.1);
+      visibility: hidden;
+    }
+
+    .ksg-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .add-btn {
+      background-color: var(--success);
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .remove-btn {
+      background-color: var(--highlight);
+      cursor: pointer;
+      border: none;
+      padding: 8px;
+      width: 100%;
+    }
+
+    /* Лестница */
+    .floor-row {
+      border-bottom: 1px solid var(--accent);
+      padding: 15px 0;
+    }
+
+    .floor-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--text-muted);
+    }
+
+    .rewards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .reward-btn {
+      padding: 20px 15px 15px 15px;
+      background-color: transparent;
+      border: 2px solid var(--accent);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      position: relative;
+    }
+
+    .reward-btn.active {
+      background-color: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .cost-5::after {
+      content: "5 очк.";
+      position: absolute;
+      top: 3px;
+      right: 5px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--warning);
+    }
+
+    .cost-10::after {
+      content: "10 очк.";
+      position: absolute;
+      top: 3px;
+      right: 5px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 0 3px #000;
+    }
+
+    .shop-section,
+    .final-section {
+      opacity: 0.3;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .unlocked {
+      opacity: 1;
+      pointer-events: all;
+      border: 1px solid var(--success);
+    }
+
+    /* Футер */
+    .sticky-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #0a0a1a;
+      padding: 15px 0;
+      box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+      border-top: 2px solid var(--accent);
+    }
+
+    .footer-item {
+      text-align: center;
+    }
+
+    .footer-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .footer-val {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .ksg-val {
+      color: var(--ksg-color);
+    }
+
+    .ksg-returned {
+      font-size: 14px;
+      color: var(--success);
+      font-weight: normal;
+    }
+
+    .positive {
+      color: var(--success);
+    }
+
+    .negative {
+      color: var(--highlight);
+    }
+
+    .rate-config {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 12px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>Планировщик Ивента</h1>
+    <button class="reset-btn" onclick="resetCalculator()">Сбросить всё</button>
+
+    <div class="card">
+      <h2>1. Источники Валюты и Трат</h2>
+
+      <div class="presets-container">
+        <button class="preset-btn" onclick="addSourcePreset('Гемы', '', '')">Гемы</button>
+        <button class="preset-btn" onclick="addSourcePreset('Эстафета удачи', '', '')">Эстафета</button>
+        <button class="preset-btn" onclick="addSourcePreset('КСГ 2500', 2500, 90)">КСГ 2500</button>
+        <button class="preset-btn" onclick="addSourcePreset('КСГ 1250', 1250, 45)">КСГ 1250</button>
+        <button class="preset-btn" onclick="addSourcePreset('Свитки (200)', '', '')">Свитки (200)</button>
+        <button class="preset-btn" onclick="addSourcePreset('Свитки (500)', '', '')">Свитки (500)</button>
+        <button class="preset-btn" onclick="addSourcePreset('Донат', '', '')">Донат</button>
+      </div>
+
+      <div class="source-header">
+        <div class="col-name">Источник валюты</div>
+        <div class="col-val">Валюта</div>
+        <div class="col-count">Кол-во</div>
+        <div class="col-ksg">Трата КСГ</div>
+        <div class="col-toggle">КСГ?</div>
+        <div class="col-action"></div>
+      </div>
+      <div id="sources-list"></div>
+      <button class="add-btn" onclick="addSourceRow()">+ Добавить источник</button>
+
+      <div class="rate-config">
+        <span style="color: var(--text-muted);">Курс:</span>
+        <input type="number" id="exchange-rate-val" value="60" style="width: 70px;" oninput="calculateBudget()">
+        <span>ивент-валюты = 10 очков</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Лестница Наград</h2>
+      <div id="ladder-container"></div>
+    </div>
+
+    <div class="card shop-section" id="shop-block">
+      <h3>🛒 Магазин Обмена (6+ этаж)</h3>
+      <div class="rewards-container">
+        <button class="reward-btn cost-5" onclick="toggleShopItem(this)">Перья (200)</button>
+        <button class="reward-btn cost-5" onclick="toggleShopItem(this)">Гемы (20000)</button>
+        <button class="reward-btn cost-5" data-ksg-return="1000" onclick="toggleShopItem(this)">КСГ (1000)</button>
+      </div>
+    </div>
+
+    <div class="card final-section" id="final-block">
+      <h3>🎁 Финал (12 этажей)</h3>
+      <div class="rewards-container">
+        <button class="reward-btn" onclick="selectFinal(this)">Мат. перехода</button>
+        <button class="reward-btn" onclick="selectFinal(this)">Мат. начала</button>
+        <button class="reward-btn" onclick="selectFinal(this)">Мат. звездной души</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sticky-footer">
+    <div class="footer-item">
+      <span class="footer-label">Очков получено</span>
+      <span id="footer-budget" class="footer-val">0</span>
+    </div>
+    <div class="footer-item">
+      <span class="footer-label">Остаток недополученной валюты</span>
+      <span id="footer-currency-left" class="footer-val" style="color:var(--text-muted)">0</span>
+    </div>
+    <div class="footer-item">
+      <span class="footer-label">Потрачено КСГ (Вернется)</span>
+      <div>
+        <span id="footer-ksg-total" class="footer-val ksg-val">0</span>
+        <span id="footer-ksg-back" class="ksg-returned">(0)</span>
+      </div>
+    </div>
+    <div class="footer-item">
+      <span class="footer-label">Нужно / Остаток</span>
+      <div>
+        <span id="footer-spent" class="footer-val">0</span> / <span id="footer-balance" class="footer-val">0</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const floorsData = [
+      { id: 1, rewards: [{ n: "Таинственный арт.", c: 10 }, { n: "Мат. бездны", c: 5 }, { n: "Мат. начала", c: 10 }] },
+      { id: 2, rewards: [{ n: "Таинственный арт.", c: 10 }, { n: "Мат. бездны", c: 5 }, { n: "Мат. начала", c: 10 }] },
+      { id: 3, rewards: [{ n: "Таинственный арт.", c: 10 }, { n: "Мат. бездны", c: 10 }, { n: "Мат. начала", c: 5 }] },
+      { id: 4, rewards: [{ n: "Исходный арт.", c: 10 }, { n: "Мат. бездны", c: 5 }, { n: "Мат. перехода", c: 10 }] },
+      { id: 5, rewards: [{ n: "Исходный арт.", c: 10 }, { n: "Мат. бездны", c: 5 }, { n: "Мат. перехода", c: 10 }] },
+      { id: 6, rewards: [{ n: "Мат. перехода", c: 10 }, { n: "Мат. начала", c: 5 }, { n: "Мат. звездной души", c: 10 }] },
+      { id: 7, rewards: [{ n: "Таинственный арт.", c: 10 }, { n: "Мат. гримуара", c: 10 }, { n: "Мат. начала", c: 5 }] },
+      { id: 8, rewards: [{ n: "Таинственный арт.", c: 10 }, { n: "Мат. бездны", c: 10 }, { n: "Мат. начала", c: 5 }] },
+      { id: 9, rewards: [{ n: "Таинственный арт.", c: 10 }, { n: "Мат. бездны", c: 10 }, { n: "Мат. начала", c: 5 }] },
+      { id: 10, rewards: [{ n: "Исходный арт.", c: 10 }, { n: "Мат. гримуара", c: 10 }, { n: "Мат. перехода", c: 5 }] },
+      { id: 11, rewards: [{ n: "Исходный арт.", c: 10 }, { n: "Мат. бездны", c: 10 }, { n: "Мат. перехода", c: 5 }] },
+      { id: 12, rewards: [{ n: "Мат. перехода", c: 10 }, { n: "Мат. начала", c: 10 }, { n: "Мат. звездной души", c: 10 }] }
+    ];
+
+    let state = { totalPoints: 0, spentPoints: 0, ksgSpent: 0, ksgReturned: 0, selectedFloors: {} };
+
+    window.onload = () => {
+      renderLadder();
+      loadFromCache();
+    };
+
+    function saveToCache() {
+      const sources = [];
+      document.querySelectorAll('.source-row').forEach(row => {
+        sources.push({
+          name: row.querySelector('.source-name').value,
+          amount: row.querySelector('.amount').value,
+          count: row.querySelector('.count').value,
+          ksg: row.querySelector('.ksg-amount').value,
+          isKsg: row.querySelector('.is-ksg').checked
+        });
+      });
+
+      const activeRewards = Array.from(document.querySelectorAll('.reward-btn.active')).map(btn => btn.id || btn.innerText);
+
+      const cache = {
+        sources: sources,
+        rate: document.getElementById('exchange-rate-val').value,
+        selectedFloors: state.selectedFloors,
+        activeRewards: activeRewards
+      };
+      localStorage.setItem('event_calc_cache', JSON.stringify(cache));
+    }
+
+    function loadFromCache() {
+      const data = localStorage.getItem('event_calc_cache');
+      if (!data) return;
+      const cache = JSON.parse(data);
+
+      document.getElementById('exchange-rate-val').value = cache.rate || 60;
+      cache.sources.forEach(s => addSourceRow(s.name, s.ksg, s.amount, s.isKsg, s.count));
+
+      state.selectedFloors = cache.selectedFloors || {};
+
+      // Восстановление кнопок
+      cache.activeRewards.forEach(idOrText => {
+        let btn = document.getElementById(idOrText) || Array.from(document.querySelectorAll('.reward-btn')).find(b => b.innerText === idOrText);
+        if (btn) btn.classList.add('active');
+      });
+
+      checkUnlocks();
+      calculateBudget();
+      calculateSpent();
+    }
+
+    function resetCalculator() {
+      if (!confirm("Удалить все данные?")) return;
+      localStorage.removeItem('event_calc_cache');
+      location.reload();
+    }
+
+    function addSourceRow(name = '', ksg = '', currency = '', isKsg = false, count = 1) {
+      const div = document.createElement('div');
+      div.className = 'input-row source-row';
+      div.innerHTML = `
+            <div class="col-name"><input type="text" class="source-name" value="${name}" style="width:95%" oninput="saveToCache()"></div>
+            <div class="col-val"><input type="number" class="amount" value="${currency}" style="width:85%" oninput="calculateBudget()"></div>
+            <div class="col-count"><input type="number" class="count" value="${count}" style="width:80%" oninput="calculateBudget()"></div>
+            <div class="col-ksg"><input type="number" class="ksg-amount source-ksg-price" value="${ksg}" style="width:85%; ${isKsg ? 'visibility:visible' : ''}" oninput="calculateBudget()"></div>
+            <div class="col-toggle"><label class="ksg-toggle"><input type="checkbox" class="is-ksg" onchange="toggleKsgField(this)" ${isKsg ? 'checked' : ''}></label></div>
+            <div class="col-action"><button class="remove-btn" onclick="this.closest('.source-row').remove(); calculateBudget()">✕</button></div>
+        `;
+      document.getElementById('sources-list').appendChild(div);
+      calculateBudget();
+    }
+
+    function addSourcePreset(name, ksg, currency) {
+      addSourceRow(name, ksg, currency, ksg !== '');
+    }
+
+    function toggleKsgField(checkbox) {
+      const row = checkbox.closest('.source-row');
+      const ksgInput = row.querySelector('.ksg-amount');
+      ksgInput.style.visibility = checkbox.checked ? 'visible' : 'hidden';
+      if (!checkbox.checked) ksgInput.value = '';
+      calculateBudget();
+    }
+
+    function calculateBudget() {
+      let totalCurrency = 0;
+      let totalKSG = 0;
+
+      document.querySelectorAll('.source-row').forEach(row => {
+        const amount = parseFloat(row.querySelector('.amount').value) || 0;
+        const count = parseFloat(row.querySelector('.count').value) || 0;
+        const ksgAmount = parseFloat(row.querySelector('.ksg-amount').value) || 0;
+        totalCurrency += amount * count;
+        if (row.querySelector('.is-ksg').checked) totalKSG += ksgAmount * count;
+      });
+
+      const rate = parseFloat(document.getElementById('exchange-rate-val').value) || 1;
+      const multiplier = Math.floor(totalCurrency / rate);
+      state.totalPoints = multiplier * 10;
+      state.ksgSpent = totalKSG;
+
+      document.getElementById('footer-currency-left').innerText = totalCurrency - (multiplier * rate);
+      updateUI();
+      saveToCache();
+    }
+
+    function renderLadder() {
+      const container = document.getElementById('ladder-container');
+      container.innerHTML = '';
+      floorsData.forEach(floor => {
+        const floorDiv = document.createElement('div');
+        floorDiv.className = 'floor-row';
+        let buttons = floor.rewards.map((rew, i) => `
+                <button class="reward-btn ${rew.c === 5 ? 'cost-5' : 'cost-10'}" 
+                    id="btn-${floor.id}-${i}" onclick="toggleReward(${floor.id}, ${i}, ${rew.c})">
+                    ${rew.n}
+                </button>`).join('');
+        floorDiv.innerHTML = `<div class="floor-title">Этаж ${floor.id}</div><div class="rewards-container">${buttons}</div>`;
+        container.appendChild(floorDiv);
+      });
+    }
+
+    function toggleReward(floorId, idx, cost) {
+      const btns = document.querySelectorAll(`[id^='btn-${floorId}-']`);
+      const clicked = document.getElementById(`btn-${floorId}-${idx}`);
+      const wasActive = clicked.classList.contains('active');
+      btns.forEach(b => b.classList.remove('active'));
+      if (!wasActive) { clicked.classList.add('active'); state.selectedFloors[floorId] = cost; }
+      else { delete state.selectedFloors[floorId]; }
+      checkUnlocks(); calculateSpent();
+    }
+
+    function toggleShopItem(btn) {
+      btn.classList.toggle('active');
+      calculateSpent();
+    }
+
+    function checkUnlocks() {
+      const cleared = Object.keys(state.selectedFloors).length;
+      document.getElementById('shop-block').classList.toggle('unlocked', cleared >= 6);
+      document.getElementById('final-block').classList.toggle('unlocked', cleared >= 12);
+    }
+
+    function calculateSpent() {
+      let spent = 0;
+      let returnedKSG = 0;
+      for (let f in state.selectedFloors) spent += state.selectedFloors[f];
+
+      document.querySelectorAll('#shop-block .reward-btn.active').forEach(btn => {
+        spent += 5;
+        if (btn.dataset.ksgReturn) returnedKSG += parseInt(btn.dataset.ksgReturn);
+      });
+
+      state.spentPoints = spent;
+      state.ksgReturned = returnedKSG;
+      updateUI();
+      saveToCache();
+    }
+
+    function selectFinal(btn) {
+      btn.parentElement.querySelectorAll('.reward-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      saveToCache();
+    }
+
+    function updateUI() {
+      const balance = state.totalPoints - state.spentPoints;
+      document.getElementById('footer-budget').innerText = state.totalPoints;
+      document.getElementById('footer-spent').innerText = state.spentPoints;
+      document.getElementById('footer-ksg-total').innerText = state.ksgSpent;
+      document.getElementById('footer-ksg-back').innerText = `(+${state.ksgReturned})`;
+
+      const balEl = document.getElementById('footer-balance');
+      balEl.innerText = balance;
+      balEl.className = 'footer-val ' + (balance >= 0 ? 'positive' : 'negative');
+    }
+  </script>
+</body>
+
+</html>
